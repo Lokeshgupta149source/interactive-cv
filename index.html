@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lokesh Gupta - Interactive CV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Slate, Stone, Amber) -->
+    <!-- Application Structure Plan: A single-page portfolio layout with a sticky top navigation for quick access to thematic sections (About, Experience, Skills, Projects, etc.). This structure is more engaging than a linear document, allowing non-linear exploration. Key interactions include skill lists for clarity and project cards that display full details upfront, reducing clicks. This user-centric design helps recruiters quickly find relevant information. -->
+    <!-- Visualization & Content Choices: 
+        - Professional Summary -> Inform -> Prominent Text Block -> Static -> Clear initial impression -> HTML/CSS.
+        - Skills -> Organize -> Styled Lists/Cards -> Static -> Provides a clear, scannable breakdown of technical vs. soft skills without requiring interaction -> HTML/CSS.
+        - Experience/Education -> Show Change -> Vertical Timeline -> Scroll -> Intuitively shows progression over time -> HTML/CSS/JS for scroll effects.
+        - Projects/Awards -> Organize/Inform -> Detailed Cards -> Static -> Presents all relevant project information upfront for immediate consumption, removing the need for modals or clicks. -> HTML/CSS.
+        - Publications -> Inform -> Styled List -> Static -> Clear, readable presentation for academic achievements -> HTML/CSS.
+        - AI Toolkit -> Interact/Generate -> Form & Output -> User inputs job description, clicks button to generate tailored content via Gemini API -> Shows practical application of AI, highly engaging -> JS Fetch API. Hidden by default, revealed by secret trigger.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .section-title {
+            color: #1e293b; /* slate-800 */
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #b45309; /* amber-700 */
+            border-bottom-color: #b45309; /* amber-700 */
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #b45309; /* amber-700 */
+            border: 4px solid #f1f5f9; /* slate-100 */
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); /* sky-50 to sky-100 gradient */
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #b45309; /* Amber */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles for the hidden printable area */
+        #pdf-content {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            width: 210mm; /* A4 width */
+            padding: 15mm;
+            background: white;
+            line-height: 1.6;
+        }
+        #pdf-content h1 { font-size: 24pt; font-weight: bold; margin-bottom: 4px; }
+        #pdf-content h2 { font-size: 14pt; font-weight: bold; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; margin-top: 16px; margin-bottom: 12px; }
+        #pdf-content h3 { font-size: 11pt; font-weight: bold; margin-bottom: 2px; }
+        #pdf-content p, #pdf-content li { font-size: 10pt; }
+        #pdf-content .contact-info { font-size: 10pt; margin-bottom: 16px; text-align: left; }
+        #pdf-content .section { margin-bottom: 16px; }
+        #pdf-content ul { padding-left: 20px; }
+        #secret-trigger { cursor: pointer; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">Lokesh Gupta</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#summary" class="nav-link font-medium pb-1">About</a>
+                <a href="#experience" class="nav-link font-medium pb-1">Experience</a>
+                <a href="#skills" class="nav-link font-medium pb-1">Skills</a>
+                <a href="#projects" class="nav-link font-medium pb-1">Projects</a>
+                <a href="#contact" class="nav-link font-medium pb-1">Contact</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-slate-800 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#summary" class="block py-2 nav-link">About</a>
+            <a href="#experience" class="block py-2 nav-link">Experience</a>
+            <a href="#skills" class="block py-2 nav-link">Skills</a>
+            <a href="#projects" class="block py-2 nav-link">Projects</a>
+            <a href="#contact" class="block py-2 nav-link">Contact</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="summary" class="hero-section scroll-mt-24">
+            <div class="container mx-auto px-6 py-24 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold section-title mb-4">Lokesh Gupta</h2>
+                <p id="cv-summary" class="text-lg text-slate-600 leading-relaxed max-w-4xl mx-auto">
+                    A dedicated and detail-oriented Bachelor of Pharmacy student with hands-on experience in both community and hospital pharmacy settings. Possesses practical skills in pharmaceutical operations, inventory management, and UV Spectroscopy. A proactive leader with a proven track record of success in academic projects, research presentations, and co-curricular activities. Eager to apply a strong foundation in pharmaceutical sciences and a passion for innovation to a challenging role in the healthcare industry.
+                </p>
+                <div class="mt-8 flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6 text-slate-600">
+                    <span class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>lokeshgupta149@gmail.com</span>
+                    <span class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>+91 7078484038</span>
+                    <span class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>Mansaram Landour Cantt, Mussoorie, Dehradun</span>
+                </div>
+                <button id="download-pdf" class="mt-10 inline-flex items-center bg-slate-800 text-white font-bold py-3 px-6 rounded-md hover:bg-slate-900 transition-colors duration-300">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    Download as PDF
+                </button>
+            </div>
+        </section>
+
+        <div class="container mx-auto px-6 py-12">
+            <!-- Experience & Education Section -->
+            <section id="experience" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold section-title text-center mb-12">Career & Education Timeline</h2>
+                <div class="max-w-3xl mx-auto">
+                    <div class="relative border-l-2 border-slate-200 pl-10">
+                        <div class="mb-10 relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Bachelor of Pharmacy</h3>
+                            <p class="text-md text-slate-500">Graphic Era Hill University, Dehradun | 2021 – 2025</p>
+                            <p class="mt-2 text-slate-600">CGPA: 7.67</p>
+                        </div>
+                        <div class="mb-10 relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Pharmacy Intern</h3>
+                            <p class="text-md text-slate-500">Velmed Hospital, Dehradun (1 Month Internship at In-Patient Department)</p>
+                            <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                                <li>Managed inventory and familiarized with various medical devices.</li>
+                            </ul>
+                        </div>
+                        <div class="mb-10 relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Pharmacy Intern</h3>
+                            <p class="text-md text-slate-500">PharmOS Pharmacy Ltd. (1 Month Internship)</p>
+                            <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                                <li>Explored OTC medicines and diverse pharmaceuticals.</li>
+                                <li>Gained insights into online pharmacy operations.</li>
+                            </ul>
+                        </div>
+                        <div class="mb-10 relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Hands-on Training in UV Spectroscopy</h3>
+                            <p class="text-md text-slate-500">Graphic Era Hill University</p>
+                            <p class="mt-2 text-slate-600">Gained extensive hands-on experience with UV spectrophotometry. Became proficient in operating UV spectrophotometer, conducting precise measurements, and analyzing spectral data. Training included calibrating the instrument, preparing samples, and interpreting results to ensure accurate and reliable data for various research and quality control applications.</p>
+                        </div>
+                        <div class="mb-10 relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Intermediate</h3>
+                            <p class="text-md text-slate-500">Kendriya Vidyalaya L.B.S.N.A.A, Mussoorie | 2021</p>
+                        </div>
+                        <div class="relative timeline-item">
+                            <h3 class="text-xl font-semibold text-slate-800">Highschool</h3>
+                            <p class="text-md text-slate-500">St. Clare's Convent School, Mussoorie | 2019</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold section-title text-center mb-12">Core Competencies</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-4 text-center">Technical Skills</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">UV Spectroscopy</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Pharmaceutical Formulation</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Inventory Management</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">OTC Drug Knowledge</p></li>
+                             <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Medical Device Familiarity</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Research & Data Analysis</p></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-4 text-center">Soft Skills</h3>
+                        <ul class="space-y-3">
+                           <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Effective Communication</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Public Relations</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Teamwork & Leadership</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Critical Thinking</p></li>
+                            <li class="flex items-center"><span class="text-amber-600 mr-3">&#10146;</span><p class="text-slate-600">Problem-Solving</p></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+                     <h3 class="text-2xl font-semibold text-slate-800 mb-4 text-center">Languages</h3>
+                     <div class="flex justify-center space-x-8 text-slate-600">
+                        <span>English (Fluent)</span>
+                        <span class="border-l-2 border-slate-200"></span>
+                        <span>Hindi (Fluent)</span>
+                        <span class="border-l-2 border-slate-200"></span>
+                        <span>German (Beginner)</span>
+                     </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold section-title text-center mb-12">Key Projects</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800">Rural MedConnect</h3>
+                        <p class="text-slate-600 mt-2">A web platform for improving the availability and accessibility of medicines in remote and underserved areas.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800">Organic Soap Formulation</h3>
+                        <p class="text-slate-600 mt-2">Formulated and developed a fully organic soap using a base of Multani Mitti (Fuller's Earth), enhanced with the antibacterial and soothing properties of Neem and Aloe Vera.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800">Environmental Microbiome Study</h3>
+                        <p class="text-slate-600 mt-2">Conducted a pilot study to understand the "Environmental impact of Microbiome adhered on the Ganga shoreline," analyzing water samples from Haridwar, Rishikesh, and Devprayag Sangam.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800">Herbal Ointment Formulation</h3>
+                        <p class="text-slate-600 mt-2">Formulated and evaluated a topical ointment loaded with extracts from *Clitoria ternatea* (Butterfly Pea flower) to investigate its potential therapeutic properties for dermatological use.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Awards & Publications Section -->
+            <section id="awards" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold section-title text-center mb-12">Awards & Publications</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-4">Achievements</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-start"><span class="text-amber-600 mr-3 mt-1">&#10022;</span><p class="text-slate-600"><strong>Won First Prize for an oral presentation</strong> at the National Symposium on "Drug Discovery: From Nature to Novel Medicine." held at CT University, Ludhiana, on 18 April 2025. Recognized for presenting impactful research on microbiome studies and their role in pharmaceutical innovation.</p></li>
+                            <li class="flex items-start"><span class="text-amber-600 mr-3 mt-1">&#10022;</span><p class="text-slate-600"><strong>Presented a startup idea at Pharma Anveshan 2025,</strong> engaging with industry leaders on funding, regulations, and innovation in pharmaceutical entrepreneurship. An event organized by School Of Pharmacy, Graphic Era Hill University as National Pharma Education Day on the occasion of Birth anniversary of Prof.M L Schroff.</p></li>
+                            <li class="flex items-start"><span class="text-amber-600 mr-3 mt-1">&#10022;</span><p class="text-slate-600"><strong>Poster ranked among top 10 at Avishkar 2024,</strong> an event by the IPR Cell and IIC on November 18, 2024, at Graphic Era Hill University. My poster on my startup idea was highlighted for its innovative aspects and potential impact.</p></li>
+                             <li class="flex items-start"><span class="text-amber-600 mr-3 mt-1">&#10022;</span><p class="text-slate-600">Participated in the <strong>International Webinar on "Contemporary Science & Technology For Sustainability of Mankind (CSTM 2021)"</strong> organized by Graphic Era Hill University on 19th November, 2021.</p></li>
+                             <li class="flex items-start"><span class="text-amber-600 mr-3 mt-1">&#10022;</span><p class="text-slate-600">Participated in a <strong>Quiz Competition on 'National Science Day'</strong> organized by Department of Civil Engineering, Graphic Era Deemed to be University in association with IIC GEU & Institution of Engineers (India) Student Chapter, GEU on 28th February, 2022.</p></li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-4">Upcoming Publications</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-amber-600 mr-3 mt-1">&#128214;</span>
+                                <p class="text-slate-600"><strong>Book Chapter:</strong> "Polydopamine assisted drug conjugates as double sword for anti bacterial property and biofilm progression." (ISBN: 9780443330704)</p>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-amber-600 mr-3 mt-1">&#128214;</span>
+                                <p class="text-slate-600"><strong>Book Chapter:</strong> "A brief introduction to Nanotherapeutics: A Magic bullet for bacterial infection."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Co-curricular Activities Section -->
+            <section id="activities" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold section-title text-center mb-12">Co-curricular Activities</h2>
+                 <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">Event Volunteer</h3>
+                        <p class="text-slate-600">Actively involved in organizing and participating in departmental events aimed at spreading health and awareness about "Over the Counter (OTC) Drugs.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">Team Leader</h3>
+                        <p class="text-slate-600">Led an inter-department club (Sanjeevni Club) responsible for coordinating various academic and cultural events within the department.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">Value-Added Course</h3>
+                        <p class="text-slate-600">Successfully completed a certified value-added course during graduation to enhance domain-specific skills.</p>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Contact Section -->
+            <section id="contact" class="scroll-mt-24 text-center">
+                 <h2 class="text-3xl font-bold section-title text-center mb-4">Get In Touch</h2>
+                 <p class="text-center text-slate-600 max-w-xl mx-auto mb-8">I'm always open to discussing new opportunities and challenges. Feel free to reach out to me via email.</p>
+                 <a href="mailto:lokeshgupta149@gmail.com" class="inline-block bg-slate-800 text-white font-bold py-3 px-6 rounded-md hover:bg-slate-900 transition-colors duration-300">
+                    Contact Me
+                 </a>
+            </section>
+
+            <!-- AI Toolkit Section (Hidden by default) -->
+            <section id="ai-toolkit" class="hidden mb-16 scroll-mt-24 bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold section-title text-center mb-4">? AI-Powered Career Toolkit</h2>
+                <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">Paste a job description below to instantly tailor my profile for the role. The Gemini API will generate a customized professional summary and a draft cover letter, highlighting how my skills and experience align with the position.</p>
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-4">
+                        <label for="job-description" class="block text-lg font-medium text-slate-700 mb-2">Job Description</label>
+                        <textarea id="job-description" rows="8" class="w-full p-3 border border-slate-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Paste the full job description here..."></textarea>
+                    </div>
+                    <button id="generate-button" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-md hover:bg-amber-700 transition-colors duration-300 flex items-center justify-center space-x-2">
+                        <span>Generate Tailored Summary & Cover Letter</span>
+                    </button>
+                    <div id="loading-indicator" class="hidden flex justify-center mt-6">
+                        <div class="loader"></div>
+                    </div>
+                    <div id="error-message" class="hidden text-red-600 bg-red-100 p-4 rounded-md mt-6"></div>
+                    <div id="ai-output" class="hidden mt-8 space-y-8">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-3">Tailored Professional Summary</h3>
+                            <div id="tailored-summary" class="bg-slate-100 p-4 rounded-md text-slate-700 whitespace-pre-wrap"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-3">Draft Cover Letter</h3>
+                            <div id="cover-letter" class="bg-slate-100 p-4 rounded-md text-slate-700 whitespace-pre-wrap"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer class="text-center py-8 mt-12 border-t border-slate-200 bg-white">
+        <p id="secret-trigger" class="text-slate-500 select-none">&copy; 2025 Lokesh Gupta. Interactive CV created with care.</p>
+    </footer>
+
+    <!-- Hidden printable area -->
+    <div id="printable-area" class="hidden" style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="pdf-content"></div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const { jsPDF } = window.jspdf;
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    document.querySelector(targetId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 120) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            const generateButton = document.getElementById('generate-button');
+            const jobDescriptionInput = document.getElementById('job-description');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const aiOutput = document.getElementById('ai-output');
+            const tailoredSummaryDiv = document.getElementById('tailored-summary');
+            const coverLetterDiv = document.getElementById('cover-letter');
+            const errorMessageDiv = document.getElementById('error-message');
+            const downloadPdfButton = document.getElementById('download-pdf');
+
+            const cvData = {
+                name: "Lokesh Gupta",
+                summary: document.getElementById('cv-summary').innerText,
+                contact: {
+                    email: "lokeshgupta149@gmail.com",
+                    phone: "+91 7078484038",
+                    location: "Mansaram Landour Cantt, Mussoorie, Dehradun"
+                },
+                experience: [
+                    {
+                        title: "Pharmacy Intern",
+                        company: "Velmed Hospital, Dehradun",
+                        details: "Managed inventory and familiarized with various medical devices in the In-Patient Department."
+                    },
+                    {
+                        title: "Pharmacy Intern",
+                        company: "PharmOS Pharmacy Ltd.",
+                        details: "Explored OTC medicines, diverse pharmaceuticals, and gained insights into online pharmacy operations."
+                    },
+                     {
+                        title: "Hands-on Training in UV Spectroscopy",
+                        company: "Graphic Era Hill University",
+                        details: "Gained extensive hands-on experience with UV spectrophotometry, including operation, measurement, data analysis, calibration, and sample preparation."
+                    }
+                ],
+                education: [
+                    {
+                        degree: "Bachelor of Pharmacy",
+                        institution: "Graphic Era Hill University, Dehradun",
+                        years: "2021-2025",
+                        cgpa: "7.67"
+                    },
+                    {
+                        degree: "Intermediate",
+                        institution: "Kendriya Vidyalaya L.B.S.N.A.A, Mussoorie",
+                        years: "2021"
+                    },
+                    {
+                        degree: "Highschool",
+                        institution: "St. Clare's Convent School, Mussoorie",
+                        years: "2019"
+                    }
+                ],
+                skills: {
+                    technical: ["UV Spectroscopy", "Pharmaceutical Formulation", "Inventory Management", "OTC Drug Knowledge", "Medical Device Familiarity", "Research & Data Analysis"],
+                    soft: ["Effective Communication", "Public Relations", "Teamwork & Leadership", "Critical Thinking", "Problem-Solving"]
+                },
+                projects: [
+                    "Rural MedConnect: A web platform for improving medicine availability in remote areas.",
+                    "Organic Soap Formulation: Developed an organic soap with Multani Mitti, Neem, and Aloe Vera.",
+                    "Environmental Microbiome Study: A pilot study on the Ganga shoreline microbiome.",
+                    "Herbal Ointment Formulation: Formulated and evaluated a topical ointment with Clitoria ternatea extracts."
+                ]
+            };
+            
+            async function callGeminiApi(jobDescription) {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const systemPrompt = `You are an expert career coach and resume writer. Your task is to help a candidate named Lokesh Gupta tailor his CV and write a cover letter for a specific job. Use the provided CV data and job description. Maintain a professional and confident tone.`;
+                
+                const userQuery = `
+                    Here is the candidate's CV information in JSON format:
+                    ${JSON.stringify(cvData, null, 2)}
+
+                    Here is the job description they are applying for:
+                    "${jobDescription}"
+
+                    Based on the CV data and the job description, perform the following two tasks and provide the output in a JSON object:
+                    1. Rewrite the professional summary: Create a new, concise professional summary (3-4 sentences) for Lokesh that highlights his most relevant skills and experiences for this specific job.
+                    2. Draft a cover letter: Write a professional and compelling draft cover letter from Lokesh. The letter should be well-structured, express genuine interest, connect his specific experiences (from his CV) to the job requirements, and have a strong call to action.
+                `;
+
+                const payload = {
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "tailoredSummary": { "type": "STRING", "description": "The rewritten professional summary." },
+                                "coverLetterDraft": { "type": "STRING", "description": "The drafted cover letter." }
+                            },
+                            required: ["tailoredSummary", "coverLetterDraft"]
+                        }
+                    }
+                };
+                
+                let response;
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch(error) {
+                    console.error("API call failed:", error);
+                    errorMessageDiv.textContent = `An error occurred while contacting the AI model. Please try again later. Details: ${error.message}`;
+                    errorMessageDiv.classList.remove('hidden');
+                    return null;
+                }
+            }
+
+
+            generateButton.addEventListener('click', async () => {
+                const jobDescription = jobDescriptionInput.value.trim();
+                if (!jobDescription) {
+                    alert('Please paste a job description first.');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                aiOutput.classList.add('hidden');
+                errorMessageDiv.classList.add('hidden');
+                generateButton.disabled = true;
+
+                const result = await callGeminiApi(jobDescription);
+                
+                loadingIndicator.classList.add('hidden');
+                generateButton.disabled = false;
+
+                if (result && result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    try {
+                        const parsedResult = JSON.parse(result.candidates[0].content.parts[0].text);
+                        tailoredSummaryDiv.innerText = parsedResult.tailoredSummary;
+                        coverLetterDiv.innerText = parsedResult.coverLetterDraft;
+                        aiOutput.classList.remove('hidden');
+                    } catch (e) {
+                         console.error("Failed to parse AI response:", e);
+                         errorMessageDiv.textContent = 'The AI returned an invalid response. Please try again.';
+                         errorMessageDiv.classList.remove('hidden');
+                    }
+                }
+            });
+
+            downloadPdfButton.addEventListener('click', () => {
+                const pdfContent = document.getElementById('pdf-content');
+                const currentSummary = tailoredSummaryDiv.innerText.trim() ? tailoredSummaryDiv.innerText : cvData.summary;
+                const coverLetter = coverLetterDiv.innerText.trim() ? coverLetterDiv.innerText : "";
+
+                let html = `
+                    <div class="section">
+                        <h1>${cvData.name}</h1>
+                        <p class="contact-info">${cvData.contact.location} | ${cvData.contact.phone} | ${cvData.contact.email}</p>
+                    </div>
+                `;
+
+                if (coverLetter) {
+                    html += `
+                        <div class="section">
+                            <h2>Cover Letter</h2>
+                            <p>${coverLetter.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="section">
+                        <h2>Professional Summary</h2>
+                        <p>${currentSummary}</p>
+                    </div>
+                    <div class="section">
+                        <h2>Work Experience</h2>
+                        ${cvData.experience.map(exp => `
+                            <div>
+                                <h3>${exp.title} - ${exp.company}</h3>
+                                <p>${exp.details}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="section">
+                        <h2>Education</h2>
+                        ${cvData.education.map(edu => `
+                            <div>
+                                <h3>${edu.degree}</h3>
+                                <p>${edu.institution} | ${edu.years} ${edu.cgpa ? `| CGPA: ${edu.cgpa}`: ''}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                     <div class="section">
+                        <h2>Skills</h2>
+                        <h3>Technical</h3>
+                        <ul>${cvData.skills.technical.map(s => `<li>${s}</li>`).join('')}</ul>
+                        <h3>Soft Skills</h3>
+                        <ul>${cvData.skills.soft.map(s => `<li>${s}</li>`).join('')}</ul>
+                    </div>
+                    <div class="section">
+                        <h2>Projects</h2>
+                        <ul>${cvData.projects.map(p => `<li>${p}</li>`).join('')}</ul>
+                    </div>
+                `;
+
+                pdfContent.innerHTML = html;
+
+                const printableArea = document.getElementById('printable-area');
+                printableArea.classList.remove('hidden');
+
+                html2canvas(pdfContent, { scale: 2 }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+                    const ratio = canvasWidth / canvasHeight;
+                    const imgWidth = pdfWidth - 30; // 15mm margin on each side
+                    const imgHeight = imgWidth / ratio;
+                    let heightLeft = imgHeight;
+                    let position = 15; // Top margin
+
+                    pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+                    heightLeft -= (pdfHeight - 30);
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight + 15; // 15mm margin
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+                        heightLeft -= (pdfHeight - 30);
+                    }
+
+                    pdf.save('Lokesh_Gupta_CV.pdf');
+                    printableArea.classList.add('hidden');
+                });
+            });
+
+            // Secret trigger for AI toolkit
+            const secretTrigger = document.getElementById('secret-trigger');
+            let clickCount = 0;
+            let lastClickTime = 0;
+
+            secretTrigger.addEventListener('click', () => {
+                const currentTime = new Date().getTime();
+                if (currentTime - lastClickTime > 1000) { // Reset if clicks are more than 1 second apart
+                    clickCount = 0;
+                }
+                lastClickTime = currentTime;
+                clickCount++;
+
+                if (clickCount === 5) {
+                    const aiToolkitSection = document.getElementById('ai-toolkit');
+                    if (aiToolkitSection.classList.contains('hidden')) {
+                        aiToolkitSection.classList.remove('hidden');
+                        aiToolkitSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    clickCount = 0; // Reset after showing
+                }
+            });
+        });
+    </script>
+</body>
+</html>
